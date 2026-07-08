@@ -1,0 +1,301 @@
+openapi: 3.1.0
+info:
+  title: Porta Jurídica Pública
+  version: 0.1.0-a2
+  description: >
+    Action única para a Porta Única Milena consultar fontes jurídicas públicas oficiais.
+    Não protocola, não peticiona, não acessa sistemas autenticados e não substitui revisão humana.
+servers:
+  - url: https://SEU-DOMINIO-AQUI
+    description: Produção HTTPS do hub porta-juridica-publica
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      operationId: health
+      summary: Verifica saúde do hub jurídico público
+      security: []
+      responses:
+        "200":
+          description: Serviço online
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /sources:
+    get:
+      operationId: listLegalPublicSources
+      summary: Lista fontes públicas oficiais configuradas
+      responses:
+        "200":
+          description: Fontes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  sources:
+                    type: array
+                    items:
+                      type: object
+  /search/global:
+    post:
+      operationId: searchLegalGlobal
+      summary: Busca jurídica pública global com roteamento seguro
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Resultado normalizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NormalizedResponse"
+  /search/datajud/processo:
+    post:
+      operationId: searchDataJudProcess
+      summary: Consulta processo público por número no CNJ DataJud
+      description: >
+        Pesquisa metadados públicos no DataJud. Exige tribunal ou endpoint quando o backend não tiver roteamento nacional.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataJudProcessRequest"
+      responses:
+        "200":
+          description: Resultado DataJud normalizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NormalizedResponse"
+  /search/legislacao:
+    post:
+      operationId: searchLegislation
+      summary: Pesquisa legislação/metadados jurídicos no LexML
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Resultado LexML normalizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NormalizedResponse"
+  /search/proposicoes:
+    post:
+      operationId: searchLegislativeBills
+      summary: Pesquisa proposições na Câmara ou Senado/Congresso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Resultado legislativo normalizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NormalizedResponse"
+  /search/datasets:
+    post:
+      operationId: searchLegalDatasets
+      summary: Pesquisa datasets em portais CKAN oficiais, inicialmente STJ e TSE
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Datasets normalizados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NormalizedResponse"
+  /search/dou:
+    post:
+      operationId: searchDouPublications
+      summary: Rota protegida para orientação/consulta DOU-INLABS
+      description: >
+        Não deve usar senha, token, sessão ou credencial no GPT. Implementação completa depende de configuração segura no servidor.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Resultado/estado do conector DOU
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NormalizedResponse"
+  /normalize/citation:
+    post:
+      operationId: normalizeLegalCitation
+      summary: Normaliza citação simples de fonte jurídica pública
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CitationRequest"
+      responses:
+        "200":
+          description: Citação normalizada
+          content:
+            application/json:
+              schema:
+                type: object
+  /timeline/processo:
+    post:
+      operationId: buildProcessTimeline
+      summary: Gera linha do tempo pública auxiliar de processo DataJud
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataJudProcessRequest"
+      responses:
+        "200":
+          description: Linha do tempo auxiliar
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        service:
+          type: string
+        mode:
+          type: string
+        write_executed:
+          type: boolean
+        legal_warning:
+          type: string
+    SearchRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          minLength: 2
+          maxLength: 500
+        source_hint:
+          type: string
+          description: "Opcional: camara, senado, stj, tse, lexml, datajud"
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+        filters:
+          type: object
+          additionalProperties: true
+          description: "Filtros opcionais seguros, ex: ano, siglaTipo, numero, tribunal, endpoint, portal"
+    DataJudProcessRequest:
+      type: object
+      required:
+        - numero_processo
+      properties:
+        numero_processo:
+          type: string
+          description: Número CNJ do processo, com ou sem pontuação
+        tribunal:
+          type: string
+          description: "Sigla do tribunal/índice DataJud, ex: tjsc, trf4, tst, stj"
+        endpoint:
+          type: string
+          description: "Endpoint exato, ex: api_publica_tjsc"
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+    CitationRequest:
+      type: object
+      required:
+        - title
+        - source
+      properties:
+        title:
+          type: string
+        source:
+          type: string
+        url:
+          type: string
+        date:
+          type: string
+    NormalizedItem:
+      type: object
+      properties:
+        title:
+          type: string
+        summary:
+          type: string
+        source:
+          type: string
+        source_url:
+          type: string
+        official:
+          type: boolean
+        date:
+          type: string
+        raw:
+          description: Dados brutos da fonte
+    NormalizedResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+        mode:
+          type: string
+        queried_at:
+          type: string
+        source:
+          type: string
+        source_url:
+          type: string
+        confidence:
+          type: string
+          enum: [baixa, media, alta]
+        legal_warning:
+          type: string
+        limits:
+          type: array
+          items:
+            type: string
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/NormalizedItem"
+        raw:
+          description: Dados brutos da fonte
