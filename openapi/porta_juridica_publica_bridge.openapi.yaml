@@ -1,0 +1,128 @@
+openapi: 3.1.0
+info:
+  title: Porta Jurídica Pública Bridge
+  version: 0.1.0-bridge
+  description: Ponte HTTPS no domínio peterle.adv.br para a API jurídica pública da Porta Única Milena.
+servers:
+  - url: https://peterle.adv.br/juridica-api
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: OK
+  /sources:
+    get:
+      operationId: listLegalPublicSources
+      responses:
+        '200':
+          description: Fontes públicas jurídicas
+  /search/legislacao:
+    post:
+      operationId: searchLegislacao
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Resultado normalizado
+  /search/proposicoes:
+    post:
+      operationId: searchProposicoes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Resultado normalizado
+  /search/global:
+    post:
+      operationId: searchLegalGlobal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Resultado normalizado
+  /search/datajud/processo:
+    post:
+      operationId: searchDataJudProcess
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [numero_processo]
+              properties:
+                numero_processo:
+                  type: string
+                tribunal:
+                  type: string
+                endpoint:
+                  type: string
+                limit:
+                  type: integer
+                  default: 10
+      responses:
+        '200':
+          description: Resultado DataJud
+  /search/datasets:
+    post:
+      operationId: searchLegalDatasets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Resultado datasets
+  /search/dou:
+    post:
+      operationId: searchDouPublications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Resultado DOU
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    SearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+        q:
+          type: string
+        limit:
+          type: integer
+          default: 10
+        source_hint:
+          type: string
+        filters:
+          type: object
+          additionalProperties: true
