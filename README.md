@@ -1,6 +1,6 @@
 # Porta Jurídica Pública
 
-Hub seguro para a **Porta Única Milena / Peterle Advocacia** consultar fontes jurídicas públicas oficiais sem acoplar o GPT diretamente a dezenas de APIs.
+Hub seguro para a **Mitra / Peterle Advocacia** consultar fontes jurídicas públicas oficiais sem acoplar o GPT diretamente a dezenas de APIs.
 
 ## Estado
 
@@ -104,7 +104,7 @@ Use essa especificação no GPT Builder depois que o backend estiver publicado e
 ## Limite jurídico
 
 Toda resposta deve ser tratada como pesquisa pública auxiliar.  
-A Porta deve separar:
+A Mitra deve separar:
 
 1. fonte consultada;
 2. dado encontrado;
